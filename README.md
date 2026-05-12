@@ -2,12 +2,11 @@
 
 A small terminal-based customer support agent for the Sierra Outfitters take-home assignment.
 
-The implementation intentionally keeps the agent simple:
+The implementation keeps the agent simple:
 
 - The LLM handles customer-facing wording and brand tone.
 - Deterministic Python functions handle order lookup, USPS tracking links, product recommendations, and Early Risers eligibility.
 - Static JSON files from the appendices are loaded locally.
-- No agent framework or orchestration library is used.
 
 ## Features
 
@@ -90,20 +89,3 @@ Promotion examples:
 Can I get the Early Risers Promotion?
 Do you have any discounts?
 ```
-
-## Testing
-
-```bash
-python -m pytest
-```
-
-## Design Notes
-
-The main design choice is to keep factual business logic outside the LLM. This reduces hallucinations and makes the code easier to test and extend. For example, order status is never inferred by the model. The model receives already-computed facts and is asked only to phrase the answer in Sierra Outfitters' outdoorsy tone.
-
-Potential extensions:
-
-- Replace static JSON files with real service calls.
-- Add structured LLM routing for more flexible intent detection.
-- Persist generated discount codes across sessions.
-- Add richer product ranking with embeddings if the catalog grows.

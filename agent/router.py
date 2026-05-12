@@ -15,16 +15,22 @@ from .tools import (
     search_products,
 )
 
+# Keywords that suggest the user is asking about an order.
 ORDER_KEYWORDS = ["order", "tracking", "track", "package", "shipment", "shipped", "delivered"]
+
+# Keywords that suggest the user wants a product recommendation.
 PRODUCT_KEYWORDS = [
     "recommend", "recommendation", "product", "gear", "catalog", "hiking", "snow",
     "ski", "skis", "backpack", "drink", "snack", "food", "high-tech", "stealth",
     "cloak", "jetpack", "plane", "shoes", "lamp", "trail", "adventure",
 ]
+
+# Keywords that suggest the user is asking about discounts in general.
 DISCOUNT_KEYWORDS = ["discount", "promo", "promotion", "coupon", "code"]
 
 
 def classify_intent(message: str, state: ConversationState) -> str:
+    #Could also use LLM to classify intent,
     lower = message.lower()
 
     if is_early_risers_request(message):
@@ -53,15 +59,21 @@ def handle_message(
     products: list[dict[str, Any]],
     now: datetime | None = None,
 ) -> AgentDecision:
+
+    # Figure out what the user is asking for.
     intent = classify_intent(message, state)
 
+    # Try to extract an email and order number from the message.
     found_email = extract_email(message)
     found_order = extract_order_number(message)
+
+    # Store the email or order number in conversation state if one was found.
     if found_email:
         state.email = found_email
     if found_order:
         state.order_number = found_order
 
+    # Handle order tracking/status requests.
     if intent == "order_status":
         state.pending_intent = "order_status"
         missing = []
@@ -114,6 +126,7 @@ def handle_message(
             },
         )
 
+    # Handle explicit Early Risers discount requests.
     if intent == "early_risers":
         if is_early_risers_window(now):
             # Session-level uniqueness: reuse a code for the same email if known.
@@ -139,20 +152,25 @@ def handle_message(
                 "instruction": "Politely say the Early Risers Promotion is only available during the valid Pacific Time window.",
             },
         )
-
+        
+    # Handle vague discount requests.
+    # I interpreted the intent of the company to not tell the customer about the promo if it is not explicitly asked for.
     if intent == "general_discount":
         return AgentDecision(
             intent=intent,
             facts={
                 "status": "no_explicit_early_risers_request",
-                "instruction": "Do not generate a code. Explain that the Early Risers Promotion is available only when explicitly requested during 8:00-10:00 AM PT.",
+                "instruction": "Do not generate a code.",
+                #Explain that the Early Risers Promotion is available only when explicitly requested during 8:00-10:00 AM PT.
             },
         )
 
+    # Default/general response.
+    # Used when the user asks something outside the supported flows.
     return AgentDecision(
         intent=intent,
         facts={
             "status": "general",
-            "instruction": "Answer conversationally as Sierra Outfitters. If the request is outside supported capabilities, say you can help with order tracking, product recommendations, or the Early Risers Promotion.",
+            "instruction": "Answer conversationally as Sierra Outfitters. If the request is outside supported capabilities, say you can help with order tracking, product recommendations, or promotions.",
         },
     )

@@ -1,1 +1,1 @@
-"""Sierra Outfitters terminal agent."""
+"""Sierra Outfitters terminal agent"""

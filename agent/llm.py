@@ -9,7 +9,12 @@ from openai import OpenAI
 from .prompts import RESPONSE_PROMPT, SYSTEM_PROMPT
 
 load_dotenv()
-DEFAULT_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+DEFAULT_MODEL = "gpt-4o-mini"
+
+
+def get_model() -> str:
+    return os.getenv("OPENAI_MODEL", DEFAULT_MODEL)
+
 
 def format_facts(facts: dict[str, Any]) -> str:
     return json.dumps(facts, indent=2, ensure_ascii=False)
@@ -18,7 +23,7 @@ def format_facts(facts: dict[str, Any]) -> str:
 def generate_response(
     conversation: str,
     facts: dict[str, Any],
-    model: str = DEFAULT_MODEL,
+    model: str | None = None,
 ) -> str:
     """Generate a polished customer-facing response.
 
@@ -29,6 +34,7 @@ def generate_response(
     if not api_key:
         return deterministic_fallback(facts)
 
+    model = model or get_model()
     client = OpenAI(api_key=api_key)
     prompt = RESPONSE_PROMPT.format(
         conversation=conversation or "No prior conversation.",
